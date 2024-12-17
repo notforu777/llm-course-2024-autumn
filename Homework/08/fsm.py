@@ -20,53 +20,49 @@ class FSM:
         return self.states[state_id].is_terminal
 
     def move(self, line: str, start: Optional[int] = None) -> Optional[int]:
-        """Iterate over the FSM from the given state using symbols from the line.
-        If no possible transition is found during iteration, return None.
-        If no given state start from initial.
+        if start is None:
+            start = self.initial
         
-        Args:
-            line (str): line to iterate via FSM
-            start (optional int): if passed, using as start start
-        Returns:
-            end (optional int): end state if possible, None otherwise
-        """
-        raise NotImplementedError
+        current_state = self.states[start]
+        
+        for char in line:
+            if char in current_state.transitions:
+                current_state = current_state.transitions[char]
+            else:
+                return None
+        
+        return self.states.index(current_state)
 
     def accept(self, candidate: str) -> bool:
-        """Check if the candidate is accepted by the FSM.
-
-        Args:
-            candidate (str): line to check
-        Returns:
-            is_accept (bool): result of checking
-        """
-        raise NotImplementedError
+        end_state = self.move(candidate)
+        return end_state is not None and self.is_terminal(end_state)
 
     def validate_continuation(self, state_id: int, continuation: str) -> bool:
-        """Check if the continuation can be achieved from the given state.
+        current_state = self.states[state_id]
+        
+        for char in continuation:
+            if char in current_state.transitions:
+                current_state = current_state.transitions[char]
+            else:
+                return False
+        
+        return True
 
-        Args:
-            state_id (int): state to iterate from
-            continuation (str): continuation to check
-        Returns:
-            is_possible (bool): result of checking
-        """
-        raise NotImplementedError
 
 
 def build_odd_zeros_fsm() -> tuple[FSM, int]:
-    """FSM that accepts binary numbers with odd number of zeros
-
-    For example,
-    - correct words: 0, 01, 10, 101010
-    - incorrect words: 1, 1010
-
-    Args:
-    Returns:
-        fsm (FSM): FSM
-        start_state (int): index of initial state
-    """
-    raise NotImplementedError
+    state_even = State(is_terminal=False)
+    state_odd = State(is_terminal=True)
+    
+    state_even.add_transition('0', state_odd)
+    state_even.add_transition('1', state_even)
+    
+    state_odd.add_transition('0', state_even)
+    state_odd.add_transition('1', state_odd)
+    
+    fsm = FSM(states=[state_even, state_odd], initial=0)
+    
+    return fsm, 0
 
 
 
